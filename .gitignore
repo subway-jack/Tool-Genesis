@@ -1,0 +1,7 @@
+data/*
+!data/tool_genesis_v3.json
+*.pyc
+temp/
+cache/
+__pycache__/
+.env
