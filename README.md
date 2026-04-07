@@ -1,65 +1,105 @@
-# tool-genesis
+# Tool-Genesis
 
-## Quick Start (Benchmark)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
 
-- Prerequisites:
-  - `conda`
-  - Python 3.10+
-  - `OPENAI_API_KEY` (for generation)
-  - Optional: `OPENAI_BASE_URL` (e.g. `https://api.openai.com/v1` or your gateway URL)
+**Tool-Genesis** is a benchmark for evaluating how well large language models can *create* tools, not just use them. Given a natural-language server specification, an LLM must generate a fully functional MCP (Model Context Protocol) server -- including tool schemas, business logic, state management, and error handling -- then pass a suite of held-out unit tests.
 
-- Environment setup:
-  - Create and activate a conda environment:
-    - `conda create -n toolgenesis python=3.10 -y`
-    - `conda activate toolgenesis`
-  - Install dependencies (pick one):
-    - Using pip: `pip install -r requirements.txt`
-    - Using uv: `pip install uv && uv pip install -r requirements.txt`
+## Key Features
 
-- Configure environment variables:
-  - Copy the template and create your local config:
-    - `cp .env.template .env`
-  - Edit `.env` and fill in your API keys (for a basic run you only need the OpenAI section):
-    - At minimum, set `OPENAI_API_KEY`
-    - Also set `OPENAI_BASE_URL` (e.g. `https://api.openai.com/v1` or your OpenAI-compatible gateway URL)
-    - Other provider keys in `.env.template` are optional and only needed if you plan to use them
-  - `.env` is local and should not be committed (it is ignored by `.gitignore`).
+| Metric | Value |
+|--------|-------|
+| MCP server specifications | 86 |
+| Application domains | 24 |
+| Ground-truth tools | 508 |
+| Benchmark tasks | 2,150 |
+| Held-out unit tests | 9,441 (21% negative/boundary) |
+| Models evaluated | 19 |
 
-- Configure models for benchmark generation:
-  - Edit `scripts/run_benchmark/generate_mcp.sh`
-  - In the `PLATFORM_MODELS` array:
-    - Use model IDs (`model_id`) that are valid for your LLM provider
-    - `model_id` is the model name/ID shown on the provider console for the API key you are using
-    - Different API keys or providers may expose different model lists and IDs, so make sure you copy the one that matches your own key
-    - Example (as provided by default):
-      - `OPENAI:openai/gpt-4.1-mini,openai/gpt-4.1,openai/gpt-o3,openai/gpt-5.1,openai/gpt-5.2`
-      - `OPENAI:anthropic/claude-sonnet-4`
-      - `OPENAI:google/gemini-3-flash-preview`
-    - You can comment out or replace entries with the models you actually have access to.
+A **4-level diagnostic rubric** (L1--L4) measures progressive difficulty: from single stateless tools (L1), through multi-tool servers (L2), stateful interactions (L3), to complex servers requiring external APIs and sandboxed execution (L4).
 
-- Default model used in utility LLM calls:
-  - See `src/utils/llm.py` function `call_llm`:
-    - Default arguments:
-      - `model="gpt-4.1-mini"`
-      - `platform="openai"`
-  - Make sure this `model` value matches a model ID that:
-    - Exists on the platform specified by `platform`
-    - Is consistent with the model name/ID configured for the API key on that platform
-    - Is consistent with your `.env` configuration (API key and base URL for that platform)
-  - You can override `model` and `platform` when calling `call_llm` if you need to use a different provider.
+## Quick Start
 
-- Generate environments (tool_genesis_v3):
-  ```bash
-  bash scripts/run_benchmark/generate_mcp.sh
-  ```
+```bash
+git clone https://github.com/subway-jack/Tool-Genesis.git
+cd Tool-Genesis
+pip install -r requirements.txt
+cp .env.template .env  # fill in API keys
+```
 
-- Run evaluation:
-  ```bash
-  bash scripts/run_benchmark/run_evaluation.sh
-  ```
+At minimum, set `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`) in `.env`.
 
-- Summarize results:
-  ```bash
-  python3 scripts/run_benchmark/summarize_results.py \
-    --path temp/eval_results_v3 \
-  ```
+## Running Experiments
+
+### 1. Generate MCP servers
+
+```bash
+# Generate MCP servers (Direct strategy)
+python scripts/run_benchmark/generate_mcp_from_task.py \
+  --data-path data/tool_genesis_v3.json \
+  --out-root temp/results \
+  --model gpt-4.1 --strategy direct --platform openai
+```
+
+Or run the full model sweep:
+
+```bash
+bash scripts/run_benchmark/generate_mcp.sh
+```
+
+### 2. Evaluate generated servers
+
+```bash
+python scripts/run_benchmark/run_evaluation.py \
+  --pred-path temp/results/direct_openai_gpt-4-1 \
+  --out-root temp/eval_results \
+  --workers 1
+```
+
+Or evaluate all results at once:
+
+```bash
+bash scripts/run_benchmark/run_evaluation.sh
+```
+
+### 3. Summarize results
+
+```bash
+python scripts/run_benchmark/summarize_results.py \
+  --path temp/eval_results_v3
+```
+
+## Benchmark Structure (L1--L4)
+
+| Level | Description | Scope |
+|-------|-------------|-------|
+| **L1** | Single stateless tool | Schema correctness, basic I/O |
+| **L2** | Multi-tool stateless server | Tool orchestration, shared utilities |
+| **L3** | Stateful server | In-memory state, cross-call consistency |
+| **L4** | Complex / API-dependent server | External API mocking, sandboxed execution |
+
+Each level is evaluated independently so that per-level pass rates reveal *where* a model's tool-creation ability breaks down.
+
+## Repository Layout
+
+```
+data/               # Benchmark dataset (tool_genesis_v3.json)
+scripts/            # Generation, evaluation, and summarization scripts
+src/                # Core library (LLM clients, evaluation harness, utilities)
+requirements.txt    # Python dependencies
+```
+
+## Citation
+
+```bibtex
+@article{toolgenesis2025,
+  title   = {Tool-Genesis: Evaluating Tool Creation Ability of Large Language Models},
+  author  = {Subway Jack and others},
+  year    = {2025},
+  note    = {Under review}
+}
+```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
