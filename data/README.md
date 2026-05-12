@@ -2,7 +2,7 @@
 
 ## Dataset Description
 
-**Tool-Genesis v3** provides 86 MCP (Model Context Protocol) server specifications for evaluating the tool-creation ability of large language models. Each specification describes a realistic server -- complete with natural-language requirements, ground-truth tool schemas, example tasks, and held-out unit tests -- that an LLM must implement from scratch.
+**Tool-Genesis v3** provides 86 MCP (Model Context Protocol) server specifications for evaluating requirement-driven tool creation. The journal version frames this setting as **latent contract recovery**: recovering interface, implementation, and task-utility contracts from incomplete requirements. Each specification provides a natural-language requirement, evaluator reference tool schemas, synthesized task prompts, and held-out unit-test tuples. A model must implement an MCP server from the requirement without seeing the reference schema, source code, hidden tests, or downstream trajectories during generation.
 
 ## Dataset Statistics
 
@@ -11,9 +11,11 @@
 | Server specifications | 86 |
 | Application domains | 24 |
 | Ground-truth tools | 508 |
-| Benchmark tasks | 2,150 |
+| Synthesized task prompts | 1,720 |
 | Unit tests | 9,441 |
 | Negative / boundary tests | ~21% |
+
+The public compact JSON includes synthesized task prompts but does **not** include full solver trajectories or exact paper-version L4 replay records. Exact manuscript L4 replay requires retained paper-version task/trajectory assets plus a configurable LLM solver/judge endpoint.
 
 ## Fields
 
@@ -27,9 +29,9 @@ Each entry in `tool_genesis_v3.json` is a JSON object with the following fields:
 | `primary_label` | string | Primary domain category (e.g., "Web Search & Research") |
 | `secondary_labels` | list[string] | Additional domain tags from the taxonomy |
 | `agent_input_prompt` | string | Natural-language requirement specification given to the LLM |
-| `task_example` | list[string] | Illustrative tasks the server should support |
+| `task_example` | list[string] | Synthesized task prompts for downstream utility evaluation |
 | `tool_definitions` | list[object] | Ground-truth MCP tool schemas (name, description, parameters, return type) |
-| `unit_test` | dict[string, list] | Held-out unit tests keyed by tool name; each test contains `function_name`, `arguments`, `expected_output`, and metadata |
+| `unit_test` | dict[string, list] | Public unit-test tuples keyed by tool name; each test contains `function_name`, `arguments`, and expected `function_output_content` |
 | `server_class` | string | Complexity class: `stateless` or `stateful` |
 | `requires_api` | bool | Whether the server requires external API access |
 | `sandbox_level` | string | Diagnostic level (`L1`--`L4`) assigned to the server |
@@ -59,34 +61,35 @@ The 24 primary domains span areas such as Web Search & Research, API Integration
 
 ## Quality Assurance
 
-Three independent annotators reviewed every server specification for correctness, completeness, and consistency of unit tests. Inter-annotator agreement was measured at Cohen's kappa = 0.85, indicating strong agreement. Disagreements were resolved by majority vote and a subsequent reconciliation pass.
+The released unit-test tuples were internally QA-checked for consistency, ordinary cases, and edge/failure cases. The public JSON stores final input-output tuples rather than internal QA logs or per-test provenance/category labels.
 
 ## Intended Use
 
 The dataset is designed for:
 
-- Benchmarking LLM tool-creation capabilities across the L1--L4 diagnostic rubric.
-- Comparing generation strategies (direct, chain-of-thought, iterative refinement).
-- Studying how model scale and architecture affect tool-creation performance.
+- Benchmarking LLM requirement-driven MCP tool creation across the L1--L4 diagnostic rubric.
+- Comparing generation strategies such as Direct generation and agentic coding plus L1 repair.
+- Studying interface recovery, functional correctness, downstream task utility, and failure localization.
 
 ## Limitations
 
 - **English only.** All specifications and tests are in English.
-- **No credentialed servers.** Servers requiring real API credentials (OAuth tokens, paid-tier keys) are excluded; `requires_api` servers use mock/stub backends.
-- **No persistent state.** Stateful servers (L3/L4) use in-memory state only; no database or filesystem persistence is tested.
+- **Exact L4 replay boundary.** Public artifacts support L1--L3 reproduction from requirements, schemas, source, and unit-test tuples; exact paper-version L4 replay requires retained task/trajectory assets and an LLM solver/judge endpoint.
+- **No production hardening claim.** Generated servers are evaluation artifacts and should not be treated as production-ready implementations.
+- **Limited state and credentials.** Credentialed, network-dependent, persistent production deployments are outside the current benchmark scope.
 - **Snapshot in time.** The registry crawl reflects August--September 2025; newer MCP servers are not included.
 
 ## License
 
-This dataset is released under the [MIT License](../LICENSE).
+Benchmark packaging, evaluation code, and derived metadata are released under the [MIT License](../LICENSE). Third-party MCP server artifacts retain their original upstream licenses where applicable.
 
 ## Citation
 
 ```bibtex
 @article{toolgenesis2025,
-  title   = {Tool-Genesis: Evaluating Tool Creation Ability of Large Language Models},
+  title   = {Tool-Genesis: Benchmarking Latent Contract Recovery in MCP Tool Creation},
   author  = {Subway Jack and others},
-  year    = {2025},
-  note    = {Under review}
+  year    = {2026},
+  note    = {Manuscript under review}
 }
 ```

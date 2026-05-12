@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
 
-**Tool-Genesis** is a benchmark for evaluating how well large language models can *create* tools, not just use them. Given a natural-language server specification, an LLM must generate a fully functional MCP (Model Context Protocol) server -- including tool schemas, business logic, state management, and error handling -- then pass a suite of held-out unit tests.
+**Tool-Genesis** is a benchmark for evaluating how well large language models can *create* tools, not just use them. Given a natural-language server specification, an LLM must generate a functional MCP (Model Context Protocol) server -- including tool schemas and executable implementation logic -- then pass a suite of held-out unit tests. The journal version frames this setting as **latent contract recovery**: recovering interface, implementation, and task-utility contracts from incomplete requirements.
 
 ## Key Features
 
@@ -12,11 +12,11 @@
 | MCP server specifications | 86 |
 | Application domains | 24 |
 | Ground-truth tools | 508 |
-| Benchmark tasks | 2,150 |
+| Synthesized task prompts | 1,720 |
 | Held-out unit tests | 9,441 (21% negative/boundary) |
-| Models evaluated | 19 |
+| Public compact JSON | `data/tool_genesis_v3.json` |
 
-A **4-level diagnostic rubric** (L1--L4) measures progressive difficulty: from single stateless tools (L1), through multi-tool servers (L2), stateful interactions (L3), to complex servers requiring external APIs and sandboxed execution (L4).
+A **4-level diagnostic rubric** (L1--L4) measures progressive diagnostic stages: L1 surface compliance, L2 interface fidelity, L3 functional correctness, and L4 downstream task utility. The public compact JSON includes requirements, tool schemas, synthesized task prompts, and unit-test tuples. Exact paper-version L4 replay requires retained task/trajectory assets and a configurable LLM solver/judge endpoint.
 
 ## Quick Start
 
@@ -73,10 +73,10 @@ python scripts/run_benchmark/summarize_results.py \
 
 | Level | Description | Scope |
 |-------|-------------|-------|
-| **L1** | Single stateless tool | Schema correctness, basic I/O |
-| **L2** | Multi-tool stateless server | Tool orchestration, shared utilities |
-| **L3** | Stateful server | In-memory state, cross-call consistency |
-| **L4** | Complex / API-dependent server | External API mocking, sandboxed execution |
+| **L1** | Surface compliance | Server launch and tool-registry exposure |
+| **L2** | Interface fidelity | Schema-F1 against evaluator reference schemas |
+| **L3** | Functional correctness | Held-out unit tests with ordinary and edge/failure cases |
+| **L4** | Downstream task utility | Proxy-agent task solving with generated tools |
 
 Each level is evaluated independently so that per-level pass rates reveal *where* a model's tool-creation ability breaks down.
 
@@ -93,10 +93,10 @@ requirements.txt    # Python dependencies
 
 ```bibtex
 @article{toolgenesis2025,
-  title   = {Tool-Genesis: Evaluating Tool Creation Ability of Large Language Models},
+  title   = {Tool-Genesis: Benchmarking Latent Contract Recovery in MCP Tool Creation},
   author  = {Subway Jack and others},
-  year    = {2025},
-  note    = {Under review}
+  year    = {2026},
+  note    = {Manuscript under review}
 }
 ```
 
